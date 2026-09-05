@@ -1,0 +1,44 @@
+# One command to a working system:  docker compose up --build
+#
+# The app container runs the web tier and the ingestion worker in the same
+# process, which is the right shape for a single box. To split them, add a
+# second service from the same image with RUN_WORKER_IN_WEB=true and set it to
+# false on the web service — instruments are claimed with FOR UPDATE SKIP
+# LOCKED and processed under advisory locks, so any number of workers is safe.
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: tidemark
+      POSTGRES_PASSWORD: tidemark
+      POSTGRES_DB: tidemark
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tidemark -d tidemark"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://tidemark:tidemark@db:5432/tidemark
+      # Change this in any deployment anyone else can reach.
+      SESSION_SECRET: change-me-to-a-long-random-string
+      MARKET_PROVIDERS: simulated
+      SIM_ALWAYS_OPEN: "true"
+      RUN_WORKER_IN_WEB: "true"
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+volumes:
+  pgdata:
