@@ -107,6 +107,22 @@ Nothing in the domain, the API or the UI changes. The provider seam is the only
 thing that knows the difference, and the simulator stays behind the real feed as
 a labelled fallback.
 
+### Deploy it
+
+`render.yaml` is a Render blueprint: one web service from the Dockerfile, one
+Postgres, both on the free tier.
+
+    Render dashboard → New → Blueprint → select this repository
+
+There is no release command and no setup step. Migrations, the universe seed,
+the baseline backfill and the ingestion worker all start themselves from
+`instrumentation.ts`, and `/api/health` is wired as the health check so a failed
+deploy says which of the database, the worker or a provider is at fault.
+
+Two things to know about the free tier: the service sleeps after 15 minutes of
+inactivity and takes about a minute to wake and re-seed, and the free database
+expires 30 days after creation.
+
 ---
 
 ## What it looks like with something happening

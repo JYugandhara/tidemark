@@ -1,0 +1,47 @@
+# Render blueprint — one web service and one Postgres, both on the free tier.
+#
+# Everything the app needs at boot (migrations, universe seed, baseline
+# backfill, the ingestion worker) starts itself from instrumentation.ts, so
+# there is no release command and no setup step here. Point Render at this
+# file and the only thing left to do is wait for the first build.
+#
+#   Render dashboard → New → Blueprint → pick this repository
+#
+# Note on the free tier: the web service sleeps after 15 minutes of inactivity
+# and takes roughly a minute to wake, seed and backfill on the next request.
+# The free database expires 30 days after creation.
+
+databases:
+  - name: tidemark-db
+    databaseName: tidemark
+    user: tidemark
+    plan: free
+    region: singapore
+
+services:
+  - type: web
+    name: tidemark
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    # The same endpoint the container's own HEALTHCHECK uses. It reports the
+    # database, the worker and every circuit breaker, so a red deploy says why.
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: tidemark-db
+          property: connectionString
+      # Signs the workspace cookie. Generated once by Render and never in git.
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: PGSSL
+        value: "true"
+      # The simulator keeps the demo alive outside NSE hours and is labelled
+      # as such on every price. Set this to `finnhub,simulated` and add
+      # FINNHUB_API_KEY to run against a real feed instead.
+      - key: MARKET_PROVIDERS
+        value: simulated
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
