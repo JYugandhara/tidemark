@@ -100,12 +100,23 @@ of volatility history rather than defaults.
 ### Against a real feed
 
 ```bash
+MARKET_PROVIDERS=yahoo,simulated npm run dev        # live NSE, no key needed
 MARKET_PROVIDERS=finnhub,simulated FINNHUB_API_KEY=... npm run dev
 ```
 
 Nothing in the domain, the API or the UI changes. The provider seam is the only
 thing that knows the difference, and the simulator stays behind the real feed as
 a labelled fallback.
+
+The Yahoo adapter needs no credential and carries NSE symbols, at roughly a
+fifteen-minute delay — and it stamps every quote with the *vendor's* timestamp
+rather than the fetch time, so the freshness layer ages it honestly instead of
+presenting delayed data as live. Outside exchange hours it deliberately answers
+nothing and lets the labelled simulator take over, because a screen frozen on
+Friday's close teaches a reader nothing about a product whose whole subject is
+intraday change. It is also an undocumented endpoint that could be withdrawn
+without notice, which is precisely the risk the seam exists to contain: it can
+fail entirely and nothing above it notices.
 
 ### Deploy it
 
@@ -189,7 +200,7 @@ src/
   app/api/                route handlers (Zod-validated)
   components/             the field, the signal strips, the rail
 db/migrations/            plain .sql, applied in order under an advisory lock
-tests/                    118 unit tests over the domain and resilience layers
+tests/                    127 unit tests over the domain and resilience layers
 scripts/                  migrate · seed · worker · smoke · loadtest · reset · shots
 ```
 
@@ -203,7 +214,7 @@ same code runs unchanged against a live feed or the simulator.
 ## Verification
 
 ```bash
-npm run verify     # typecheck + lint + 118 unit tests + production build
+npm run verify     # typecheck + lint + 127 unit tests + production build
 npm run smoke      # 55 end-to-end API assertions against a running server
 npm run loadtest   # read-path latency and throughput
 ```
@@ -213,7 +224,7 @@ on the same box):
 
 | | result |
 |---|---|
-| Unit tests | 118 passed |
+| Unit tests | 127 passed |
 | End-to-end API assertions | 55 passed |
 | Typecheck / lint | clean, `--max-warnings 0` |
 | Digest latency, unloaded | p50 **8.0 ms**, p99 **17.4 ms**, 116 req/s |

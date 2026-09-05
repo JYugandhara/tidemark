@@ -127,6 +127,15 @@ export interface Signal {
   headline: string;
   /** Machine-readable supporting numbers, surfaced in the "why" drawer. */
   evidence: Record<string, number | string | null>;
+  /**
+   * True when this came out of `change_events` rather than being measured on
+   * this request. A stored headline froze its numbers at detection time — a
+   * different reference price, a different variance horizon — so it is a
+   * historical claim, and anywhere it sits next to a freshly computed figure
+   * the two can legitimately disagree. Knowing which is which is what lets the
+   * UI avoid putting them side by side as if they were the same measurement.
+   */
+  stored?: boolean;
 }
 
 export interface ScoreContribution {
@@ -137,6 +146,8 @@ export interface ScoreContribution {
   strength: number;
   weight: number;
   detail: string;
+  /** Carried from the signal: was this measured now, or replayed? */
+  stored?: boolean;
 }
 
 export interface Significance {

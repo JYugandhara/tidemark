@@ -39,6 +39,11 @@ const TOP = 26; // score 100
 const LEFT = 46;
 const RIGHT = 954;
 const MAX_SIGMA = 3;
+/** Mono at 9.5px with the tracking below measures ~6.1px per character. */
+const CHAR_WIDTH = 6.1;
+const LABEL_GAP = 8;
+const LANE_HEIGHT = 12;
+const MAX_LANES = 4;
 
 const xFor = (s: number) =>
   LEFT + ((Math.max(-MAX_SIGMA, Math.min(MAX_SIGMA, s)) + MAX_SIGMA) / (2 * MAX_SIGMA)) * (RIGHT - LEFT);
@@ -92,16 +97,41 @@ export function SigmaField({ attention, quiet, quotes, threshold, selected, onSe
       });
     }
 
-    // Labels are only drawn for marks above the line, and only those can
-    // collide. Walk them left to right and lift each one that would sit on top
-    // of its neighbour.
+    // Label placement. Only marks above the line get one, and only those can
+    // collide — but they collide by *width*, not by centre distance: IDEA and
+    // HINDUNILVR sit far enough apart to pass a fixed-gap test and still
+    // overlap, because one of them is nearly three times as wide. So each label
+    // claims an interval, and a lane is reused only once its previous occupant
+    // has genuinely ended.
     const labelled = rows.filter((r) => r.above).sort((a, b) => a.x - b.x);
-    let lane = 0;
-    let prevX = -Infinity;
+    const placed: Array<{ left: number; right: number; y: number }> = [];
     for (const r of labelled) {
-      lane = r.x - prevX < 52 ? Math.min(lane + 1, 3) : 0;
-      r.labelY = Math.max(11, r.y - 9 - lane * 11);
-      prevX = r.x;
+      const halfWidth = (r.symbol.length * CHAR_WIDTH) / 2;
+      const left = r.x - halfWidth;
+      const right = r.x + halfWidth;
+
+      // Lanes are offsets from each label's *own* dot, so a lane number is not
+      // a row: two dots at different heights can sit in different lanes and
+      // still land on the same pixels. So test the box that would actually be
+      // drawn, and take the first lane that is clear in both axes at once.
+      let y = Math.max(11, r.y - 9);
+      for (let lane = 0; lane < MAX_LANES; lane++) {
+        const candidate = Math.max(11, r.y - 9 - lane * LANE_HEIGHT);
+        const clashes = placed.some(
+          (p) =>
+            left < p.right + LABEL_GAP &&
+            right > p.left - LABEL_GAP &&
+            Math.abs(candidate - p.y) < LANE_HEIGHT,
+        );
+        if (!clashes) {
+          y = candidate;
+          break;
+        }
+        y = candidate; // last resort: the topmost lane, even if tight
+      }
+
+      placed.push({ left, right, y });
+      r.labelY = y;
     }
 
     return { marks: rows, unplottable: dropped };

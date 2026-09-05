@@ -224,6 +224,57 @@ describe("the digest ranks by unusualness, not by size of move", () => {
     expect(entry.quietReason!.startsWith("VOL")).toBe(false);
   });
 
+  it("explains a quiet row with a live measurement, not a replayed one", () => {
+    // A stored event froze its numbers when it was detected — a different
+    // reference, a different horizon. The row's own sigma column is computed
+    // now. If the sentence came from the stored event the two would sit on one
+    // line disagreeing, so the live contribution wins where there is one.
+    const stale: StoredEvent = {
+      id: "e3",
+      seq: 11,
+      kind: "RANGE_BREAK",
+      direction: "up",
+      magnitude: 9,
+      dedupBucket: "range:52w:up:2026-09-04",
+      headline: "MIX broke its 52-week high — a 4.0σ move",
+      evidence: { window: "52w" },
+      firstSeenAt: NOON - 7_200_000,
+      lastUpdatedAt: NOON - 7_200_000,
+    };
+    const digest = buildDigest(
+      [item({ symbol: "MIX", dailySigma: 0.02, price: 972, unseenEvents: [stale] })],
+      { ...opts, attentionThreshold: 100 },
+    );
+    const entry = digest.quiet[0];
+    expect(entry.quiet).toBe(true);
+    // The stored RANGE_BREAK outweighs the live PRICE_MOVE on points, but the
+    // sentence must still come from the live one.
+    expect(entry.significance.contributions.some((c) => c.stored)).toBe(true);
+    expect(entry.quietReason).not.toContain("52-week");
+    expect(entry.quietReason).toContain("under your line");
+  });
+
+  it("falls back to a stored event when nothing was measured live", () => {
+    const onlyStored: StoredEvent = {
+      id: "e4",
+      seq: 12,
+      kind: "VOLUME_SURGE",
+      direction: "up",
+      magnitude: 5,
+      dedupBucket: "vol:2026-09-04:2",
+      headline: "STORE trading on 5.0× its usual volume for this time of day",
+      evidence: { ratio: 5 },
+      firstSeenAt: NOON - 60_000,
+      lastUpdatedAt: NOON - 60_000,
+    };
+    const digest = buildDigest(
+      // Flat on price, so no live signal fires and only the replayed one is left.
+      [item({ symbol: "STORE", dailySigma: 0.03, price: 1000.2, unseenEvents: [onlyStored] })],
+      { ...opts, attentionThreshold: 100 },
+    );
+    expect(digest.quiet[0].quietReason).toContain("5.0×");
+  });
+
   it("falls back to the sigma sentence when nothing at all fired", () => {
     const digest = buildDigest([item({ symbol: "FLAT", dailySigma: 0.03, price: 1001 })], opts);
     expect(digest.quiet[0].quietReason).toMatch(/σ|Barely moved/);

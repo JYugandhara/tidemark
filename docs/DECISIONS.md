@@ -157,6 +157,17 @@ made the resilience work verifiable rather than aspirational.
 
 **Non-negotiable.** The UI states which mode it is in, everywhere, always.
 
+**Since built: a keyless live feed.** `MARKET_PROVIDERS=yahoo,simulated` runs
+against real NSE prices with no credential at all. It is delayed by roughly
+fifteen minutes and it is an undocumented endpoint, so it is not presented as a
+trading-grade feed — but it does turn "the seam exists, trust me" into a command
+a reviewer can run. Two decisions inside it are worth naming: the quote carries
+the vendor's own timestamp rather than the fetch time, so the freshness layer
+ages the delay honestly; and outside exchange hours the provider returns nothing
+at all rather than serving a stale close, handing the batch to the labelled
+simulator. Both are the same principle as everywhere else — say what the data
+is, never let it imply more currency than it has.
+
 ---
 
 ## ADR-8 · Faults are injected as data, not as a demo mode

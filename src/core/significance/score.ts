@@ -160,6 +160,7 @@ export function scoreSignals(
       strength: Number(p.strength.toFixed(3)),
       weight: SIGNAL_WEIGHTS[p.signal.kind] ?? 0.5,
       detail: p.signal.headline,
+      stored: p.signal.stored,
     }))
     .sort((a, b) => b.points - a.points);
 

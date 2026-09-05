@@ -34,6 +34,7 @@ import {
 import type { MarketDataProvider, ProviderAttempt, QuoteResult } from "./types";
 import { SimulatedProvider } from "./simulated";
 import { FinnhubProvider } from "./finnhub";
+import { YahooProvider } from "./yahoo";
 
 export interface PoolQuoteResult extends QuoteResult {
   attempts: ProviderAttempt[];
@@ -310,6 +311,7 @@ export function buildProviders(): MarketDataProvider[] {
   const registry: Record<string, () => MarketDataProvider> = {
     simulated: () => new SimulatedProvider(),
     finnhub: () => new FinnhubProvider(),
+    yahoo: () => new YahooProvider(),
   };
   const chosen = config.MARKET_PROVIDERS.map((n) => registry[n]?.()).filter(
     (p): p is MarketDataProvider => Boolean(p),

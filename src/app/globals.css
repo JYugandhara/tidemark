@@ -1176,7 +1176,9 @@ kbd {
 }
 .contrib-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--accent-deep), var(--accent));
+  /* Held at the deep end of the scale. Four full-width bars at full accent is
+     more colour than a supporting detail should be spending. */
+  background: linear-gradient(90deg, var(--accent-dim), var(--accent-deep));
 }
 .contrib-points {
   text-align: right;

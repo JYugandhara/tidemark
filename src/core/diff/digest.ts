@@ -124,6 +124,7 @@ function eventToSignal(e: StoredEvent): Signal {
     dedupBucket: e.dedupBucket,
     headline: e.headline,
     evidence: e.evidence as Signal["evidence"],
+    stored: true,
   };
 }
 
@@ -251,8 +252,17 @@ function explainQuiet(
   fallback: Parameters<typeof quietReason>[0],
 ): string {
   if (fallback.isMuted || fallback.isStale) return quietReason(fallback);
-  const top = significance.contributions[0];
-  if (!top || significance.score <= 0) return quietReason(fallback);
+  if (significance.contributions.length === 0 || significance.score <= 0) {
+    return quietReason(fallback);
+  }
+  // Prefer a contribution measured on this request. A stored event's sentence
+  // carries the sigma it was detected with, against whatever reference applied
+  // then; the row's own sigma column is computed now, against the reader's
+  // current watermark. Both are true and they can differ, but sitting on one
+  // line they read as a contradiction. Taking the live one where there is a
+  // live one makes the row internally consistent by construction.
+  const top =
+    significance.contributions.find((c) => !c.stored) ?? significance.contributions[0];
   return `${stripSymbol(top.detail, symbol)} — ${Math.round(significance.score)}/100, under your line`;
 }
 
