@@ -42,6 +42,6 @@ services:
       # as such on every price. Set this to `finnhub,simulated` and add
       # FINNHUB_API_KEY to run against a real feed instead.
       - key: MARKET_PROVIDERS
-        value: simulated
+        value: yahoo,simulated
       - key: NEXT_TELEMETRY_DISABLED
         value: "1"
