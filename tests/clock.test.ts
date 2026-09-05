@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   closeInstant,
+  isMarketOpen,
   istInstant,
   makeCalendar,
   openInstant,
@@ -128,5 +129,35 @@ describe("freshness is judged against the session the reader is looking at", () 
     expect(describeAge(180_000)).toBe("3m ago");
     expect(describeAge(3 * 3_600_000)).toBe("3h ago");
     expect(describeAge(3 * 86_400_000)).toBe("3d ago");
+  });
+});
+
+describe("which clock the engine believes", () => {
+  // The rule is about which provider is *driving*, not which is configured.
+  // Naming a live feed does not mean a live feed can answer: outside exchange
+  // hours it declines and the simulator takes over, and believing the real
+  // calendar then scores generated movement against a near-zero market-time
+  // horizon — 5σ out of a 0.2% move.
+  const cal = makeCalendar();
+  const SATURDAY = istInstant("2026-09-05", 12 * 60);
+  const MONDAY_OPEN = istInstant("2026-09-07", 12 * 60);
+
+  function simulatorIsDriving(providers: string[], now: number): boolean {
+    const hasLiveFeed = providers.some((p) => p !== "simulated");
+    return !hasLiveFeed || !isMarketOpen(cal, now);
+  }
+
+  it("uses the synthetic clock when only the simulator is configured", () => {
+    expect(simulatorIsDriving(["simulated"], MONDAY_OPEN)).toBe(true);
+    expect(simulatorIsDriving(["simulated"], SATURDAY)).toBe(true);
+  });
+
+  it("uses the synthetic clock when a live feed is configured but the market is shut", () => {
+    expect(simulatorIsDriving(["yahoo", "simulated"], SATURDAY)).toBe(true);
+  });
+
+  it("believes the real calendar only while the exchange is actually open", () => {
+    expect(simulatorIsDriving(["yahoo", "simulated"], MONDAY_OPEN)).toBe(false);
+    expect(simulatorIsDriving(["finnhub", "simulated"], MONDAY_OPEN)).toBe(false);
   });
 });

@@ -200,7 +200,7 @@ src/
   app/api/                route handlers (Zod-validated)
   components/             the field, the signal strips, the rail
 db/migrations/            plain .sql, applied in order under an advisory lock
-tests/                    127 unit tests over the domain and resilience layers
+tests/                    130 unit tests over the domain and resilience layers
 scripts/                  migrate · seed · worker · smoke · loadtest · reset · shots
 ```
 
@@ -214,7 +214,7 @@ same code runs unchanged against a live feed or the simulator.
 ## Verification
 
 ```bash
-npm run verify     # typecheck + lint + 127 unit tests + production build
+npm run verify     # typecheck + lint + 130 unit tests + production build
 npm run smoke      # 55 end-to-end API assertions against a running server
 npm run loadtest   # read-path latency and throughput
 ```
@@ -224,7 +224,7 @@ on the same box):
 
 | | result |
 |---|---|
-| Unit tests | 127 passed |
+| Unit tests | 130 passed |
 | End-to-end API assertions | 55 passed |
 | Typecheck / lint | clean, `--max-warnings 0` |
 | Digest latency, unloaded | p50 **8.0 ms**, p99 **17.4 ms**, 116 req/s |
