@@ -299,6 +299,17 @@ export function App() {
               </span>
             </div>
           </div>
+
+          {/* The premise, in plain words, above the instrument that assumes it.
+              A reader who has not met sigma before reads this chart as a ranking
+              bug — the biggest mover is not at the top — until someone tells them
+              that "biggest" was never what it was sorting by. One sentence is
+              cheaper than making them find that out from the table below. */}
+          <p className="field-premise">
+            A 4% day is ordinary for SUZLON and extraordinary for HINDUNILVR.
+            <b> This ranks by how unusual a move is for that name, not by how big it is.</b>
+          </p>
+
           <SigmaField
             attention={attention}
             quiet={quiet}

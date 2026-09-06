@@ -316,6 +316,22 @@ button {
   font-weight: 500;
 }
 
+.field-premise {
+  margin: 0;
+  padding: 13px 20px 14px;
+  border-bottom: 1px solid var(--edge);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-dim);
+  max-width: 78ch;
+}
+/* The thesis clause is the brightest text in the band — it is the one sentence
+   that has to survive a reader who is skimming. */
+.field-premise b {
+  color: var(--text);
+  font-weight: 400;
+}
+
 .field-body {
   padding: 14px 20px 18px;
   /* Narrow screens scroll the instrument rather than shrinking it to
