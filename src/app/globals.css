@@ -318,8 +318,11 @@ button {
 
 .field-premise {
   margin: 0;
-  padding: 13px 20px 14px;
-  border-bottom: 1px solid var(--edge);
+  /* No rule under this one. The measure is capped so the sentence stays
+     readable, and a border on a capped box draws a divider that stops in the
+     middle of the card — worse than no divider at all. The padding separates
+     it from the plot. */
+  padding: 15px 20px 3px;
   font-size: 12.5px;
   line-height: 1.55;
   color: var(--text-dim);
